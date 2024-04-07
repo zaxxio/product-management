@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  # Axon Configuration
+  axonserver:
+    container_name: axonserver
+    image: axoniq/axonserver:latest
+    ports:
+      - "8024:8024" # HTTP port
+      - "8124:8124" # gRPC port
+    environment:
+      - AXONIQ_AXONSERVER_NAME=axonserver
+      - AXON_SERVER_HOSTNAME=axonserver
+      - AXON_SERVER_CONTEXT=default
