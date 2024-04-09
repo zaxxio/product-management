@@ -1,4 +1,4 @@
-package org.wsd.app.query;
+package org.wsd.app.query.product;
 
 public class FindProductsQuery {
 

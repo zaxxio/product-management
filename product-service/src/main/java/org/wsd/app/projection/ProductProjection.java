@@ -7,10 +7,11 @@ import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.messaging.interceptors.ExceptionHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.wsd.app.domain.ProductEntity;
 import org.wsd.app.events.ProductCreatedEvent;
 import org.wsd.app.payload.ProductRestModel;
-import org.wsd.app.query.FindProductsQuery;
+import org.wsd.app.query.product.FindProductsQuery;
 import org.wsd.app.repository.ProductRepository;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.List;
 @Log4j2
 @Component
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 @ProcessingGroup("product-group")
 public class ProductProjection {
 
@@ -32,36 +34,7 @@ public class ProductProjection {
         productEntity.setPrice(productCreatedEvent.getPrice());
         productEntity.setQuantity(productCreatedEvent.getQuantity());
 
-        try {
-            this.productRepository.save(productEntity);
-        } catch (IllegalArgumentException e) {
-            log.error(e.getMessage(), e);
-        }
-        if (true){
-            throw new Exception("Exception thrown by createProductCommand");
-        }
-    }
-
-    @ExceptionHandler(resultType = IllegalArgumentException.class)
-    public void handleIllegalArgumentException(IllegalArgumentException throwable) {
-        log.error(throwable.getMessage(), throwable);
-    }
-
-    @ExceptionHandler(resultType = Exception.class)
-    public void handleException(Exception exception) throws Exception {
-        throw exception;
-    }
-
-
-    // delegate exception axon
-    @ExceptionHandler(resultType = Exception.class)
-    public void handle(Exception e) throws Exception {
-        throw e;
-    }
-
-    @ExceptionHandler(resultType = Exception.class)
-    public void handleLog(Exception e) {
-        log.error(e.getMessage());
+        this.productRepository.save(productEntity);
     }
 
     @QueryHandler

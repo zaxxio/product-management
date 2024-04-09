@@ -7,20 +7,21 @@ import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.wsd.app.payload.ProductRestModel;
-import org.wsd.app.query.product.FindProductsQuery;
+import org.wsd.app.payload.OrderRestModel;
+import org.wsd.app.query.order.FindOrdersQuery;
 
 import java.util.List;
 
-@Tag(name = "Product Query Controller")
+@Tag(name = "Order Query Controller")
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/orders")
 @RequiredArgsConstructor
-public class ProductQueryController {
+public class OrderQueryController {
     private final QueryGateway queryGateway;
+
     @GetMapping
-    public List<ProductRestModel> getProduct() {
-        final FindProductsQuery findProductsQuery = new FindProductsQuery();
-        return this.queryGateway.query(findProductsQuery, ResponseTypes.multipleInstancesOf(ProductRestModel.class)).join();
+    public List<OrderRestModel> getOrders() {
+        final FindOrdersQuery findOrdersQuery = new FindOrdersQuery();
+        return queryGateway.query(findOrdersQuery, ResponseTypes.multipleInstancesOf(OrderRestModel.class)).join();
     }
 }

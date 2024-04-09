@@ -9,7 +9,7 @@ import org.wsd.app.comamnds.CreateProductCommand;
 import org.wsd.app.events.ProductCreatedEvent;
 
 @Aggregate
-public class ProductAggregates {
+public class ProductAggregate {
 
     @AggregateIdentifier
     private String productId;
@@ -17,10 +17,10 @@ public class ProductAggregates {
     private Integer price;
     private Integer quantity;
 
-    public ProductAggregates() {}
+    public ProductAggregate() {}
 
-    @CommandHandler
-    public ProductAggregates(CreateProductCommand createProductCommand) {
+    @CommandHandler(payloadType = CreateProductCommand.class)
+    public ProductAggregate(CreateProductCommand createProductCommand) {
 
         if (createProductCommand.getProductName() == null || createProductCommand.getProductName().isEmpty()) {
             throw new IllegalArgumentException("Product name cannot be empty");
@@ -37,9 +37,6 @@ public class ProductAggregates {
 
         AggregateLifecycle.apply(productCreatedEvent);
     }
-
-
-
 
     @EventSourcingHandler
     public void on(ProductCreatedEvent productCreatedEvent) {
