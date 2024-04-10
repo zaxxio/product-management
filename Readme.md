@@ -1,4 +1,4 @@
-# Event Sourcing & CQRS
+# Event Sourcing & CQRS (Saga Orchestration)
 
 Segregating Read and Write Operation.
 ![Screenshot](./assets/cqrs.png)
