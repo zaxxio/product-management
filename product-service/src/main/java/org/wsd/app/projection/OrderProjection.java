@@ -7,8 +7,10 @@ import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.wsd.app.comamnds.OrderStatus;
 import org.wsd.app.domain.OrderEntity;
 import org.wsd.app.domain.ProductEntity;
+import org.wsd.app.events.OrderApprovedEvent;
 import org.wsd.app.events.OrderCreatedEvent;
 import org.wsd.app.events.ProductReservedEvent;
 import org.wsd.app.payload.OrderRestModel;
@@ -42,6 +44,17 @@ public class OrderProjection {
         OrderEntity savedOrder = this.orderRepository.save(orderEntity);
         log.info("Saved order: {}", savedOrder);
 
+    }
+
+    @EventHandler
+    public void handle(OrderApprovedEvent orderApprovedEvent) {
+        Optional<OrderEntity> orderEntity = this.orderRepository.findById(orderApprovedEvent.getOrderId());
+        if (orderEntity.isEmpty()) {
+            return;
+        }
+        final OrderEntity order = orderEntity.get();
+        order.setOrderStatus(OrderStatus.APPROVED);
+        this.orderRepository.save(order);
     }
 
     @QueryHandler
