@@ -7,7 +7,6 @@ import org.axonframework.modelling.command.TargetAggregateIdentifier;
 @Data
 @Builder
 public class ProductReservedEvent {
-    @TargetAggregateIdentifier
     private final String productId;
     private final String orderId;
     private final String userId;

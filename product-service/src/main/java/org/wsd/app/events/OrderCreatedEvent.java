@@ -10,6 +10,7 @@ import org.wsd.app.comamnds.OrderStatus;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class OrderCreatedEvent {
     private String orderId;
     private String productId;

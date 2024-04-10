@@ -2,6 +2,7 @@ package org.wsd.app.projection;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import java.util.Optional;
 @Log4j2
 @Component
 @Transactional(rollbackFor = Exception.class)
+@ProcessingGroup(value = "order-group")
 @RequiredArgsConstructor
 public class OrderProjection {
     private final OrderRepository orderRepository;
@@ -37,17 +39,9 @@ public class OrderProjection {
         orderEntity.setAddressId(orderEntity.getAddressId());
         orderEntity.setOrderStatus(orderCreatedEvent.getOrderStatus());
 
-        this.orderRepository.save(orderEntity);
-    }
+        OrderEntity savedOrder = this.orderRepository.save(orderEntity);
+        log.info("Saved order: {}", savedOrder);
 
-    @EventHandler
-    public void handle(ProductReservedEvent productReservedEvent) {
-        Optional<ProductEntity> productEntity = this.productRepository.findById(productReservedEvent.getProductId());
-        if (productEntity.isPresent()) {
-            ProductEntity product = productEntity.get();
-            product.setQuantity(product.getQuantity() - productReservedEvent.getQuantity());
-            this.productRepository.save(product);
-        }
     }
 
     @QueryHandler

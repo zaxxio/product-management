@@ -1,14 +1,20 @@
 package org.wsd.app.aggregates;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.wsd.app.comamnds.CreateProductCommand;
+import org.wsd.app.comamnds.ReserveProductCommand;
 import org.wsd.app.events.ProductCreatedEvent;
+import org.wsd.app.events.ProductReservedEvent;
 
+@Data
 @Aggregate
+@NoArgsConstructor
 public class ProductAggregate {
 
     @AggregateIdentifier
@@ -17,9 +23,7 @@ public class ProductAggregate {
     private Integer price;
     private Integer quantity;
 
-    public ProductAggregate() {}
-
-    @CommandHandler(payloadType = CreateProductCommand.class)
+    @CommandHandler
     public ProductAggregate(CreateProductCommand createProductCommand) {
 
         if (createProductCommand.getProductName() == null || createProductCommand.getProductName().isEmpty()) {
@@ -45,5 +49,28 @@ public class ProductAggregate {
         this.price = productCreatedEvent.getPrice();
         this.quantity = productCreatedEvent.getQuantity();
     }
+
+    @CommandHandler
+    public void on(ReserveProductCommand reserveProductCommand) {
+        if (this.quantity < reserveProductCommand.getQuantity()) {
+            throw new IllegalArgumentException("Reserve product quantity is insufficient");
+        }
+
+        final ProductReservedEvent productReservedEvent = ProductReservedEvent.builder()
+                .productId(reserveProductCommand.getProductId())
+                .orderId(reserveProductCommand.getOrderId())
+                .userId(reserveProductCommand.getUserId())
+                .quantity(reserveProductCommand.getQuantity())
+                .build();
+
+        AggregateLifecycle.apply(productReservedEvent);
+    }
+
+
+    @EventSourcingHandler
+    public void on(ProductReservedEvent productReservedEvent) {
+        this.quantity -= productReservedEvent.getQuantity();
+    }
+
 
 }

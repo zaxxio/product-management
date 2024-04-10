@@ -1,5 +1,6 @@
 package org.wsd.app.aggregates;
 
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -12,9 +13,11 @@ import org.wsd.app.comamnds.ReserveProductCommand;
 import org.wsd.app.events.OrderCreatedEvent;
 import org.wsd.app.events.ProductReservedEvent;
 
+@Data
 @Aggregate
 @NoArgsConstructor
 public class OrderAggregate {
+
     @AggregateIdentifier
     public String orderId;
     private String productId;
@@ -23,41 +26,18 @@ public class OrderAggregate {
     private String addressId;
     private OrderStatus orderStatus;
 
-    @CommandHandler(payloadType = CreateOrderCommand.class)
+    @CommandHandler
     public OrderAggregate(CreateOrderCommand createOrderCommand) {
-        final OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent();
-        orderCreatedEvent.setProductId(createOrderCommand.getProductId());
-        orderCreatedEvent.setQuantity(createOrderCommand.getQuantity());
-        orderCreatedEvent.setUserId(createOrderCommand.getUserId());
-        orderCreatedEvent.setOrderId(createOrderCommand.getOrderId());
-        orderCreatedEvent.setOrderStatus(createOrderCommand.getOrderStatus());
-        orderCreatedEvent.setAddressId(createOrderCommand.getAddressId());
-        AggregateLifecycle.apply(orderCreatedEvent);
+        AggregateLifecycle.apply(OrderCreatedEvent.builder()
+                .orderId(createOrderCommand.getOrderId())
+                .productId(createOrderCommand.getProductId())
+                .userId(createOrderCommand.getUserId())
+                .quantity(createOrderCommand.getQuantity())
+                .addressId(createOrderCommand.getAddressId())
+                .orderStatus(OrderStatus.CREATED)
+                .build()
+        );
     }
-
-
-    @CommandHandler(payloadType = ReserveProductCommand.class)
-    public void on(ReserveProductCommand reserveProductCommand) {
-        if (quantity < reserveProductCommand.getQuantity()) {
-            throw new IllegalArgumentException("Reserve product quantity is insufficient");
-        }
-
-        final ProductReservedEvent productReservedEvent = ProductReservedEvent.builder()
-                .productId(reserveProductCommand.getProductId())
-                .orderId(reserveProductCommand.getOrderId())
-                .userId(reserveProductCommand.getUserId())
-                .quantity(reserveProductCommand.getQuantity())
-                .build();
-
-        AggregateLifecycle.apply(productReservedEvent);
-    }
-
-
-    @EventSourcingHandler
-    public void on(ProductReservedEvent productReservedEvent) {
-        this.quantity -= productReservedEvent.getQuantity();
-    }
-
 
     @EventSourcingHandler
     public void on(OrderCreatedEvent orderCreatedEvent) {

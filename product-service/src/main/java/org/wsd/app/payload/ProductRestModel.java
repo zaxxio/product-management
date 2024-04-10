@@ -8,7 +8,6 @@ import org.wsd.app.domain.ProductEntity;
 
 @Data
 public class ProductRestModel {
-    @JsonIgnore
     private String productId;
     private String productName;
     private Integer price;

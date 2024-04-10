@@ -10,11 +10,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.wsd.app.domain.ProductEntity;
 import org.wsd.app.events.ProductCreatedEvent;
+import org.wsd.app.events.ProductReservedEvent;
 import org.wsd.app.payload.ProductRestModel;
 import org.wsd.app.query.product.FindProductsQuery;
 import org.wsd.app.repository.ProductRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Log4j2
 @Component
@@ -35,6 +37,16 @@ public class ProductProjection {
         productEntity.setQuantity(productCreatedEvent.getQuantity());
 
         this.productRepository.save(productEntity);
+    }
+
+    @EventHandler
+    public void handle(ProductReservedEvent productReservedEvent) {
+        Optional<ProductEntity> productEntity = this.productRepository.findById(productReservedEvent.getProductId());
+        if (productEntity.isPresent()) {
+            final ProductEntity product = productEntity.get();
+            product.setQuantity(product.getQuantity() - productReservedEvent.getQuantity());
+            this.productRepository.save(product);
+        }
     }
 
     @QueryHandler

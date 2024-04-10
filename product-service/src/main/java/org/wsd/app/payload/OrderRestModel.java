@@ -10,12 +10,14 @@ public class OrderRestModel {
     private String productId;
     private Integer quantity;
     private String addressId;
+    private String userId;
 
     public static OrderRestModel fromEntity(OrderEntity orderEntity) {
         return OrderRestModel.builder()
                 .productId(orderEntity.getProductId())
                 .quantity(orderEntity.getQuantity())
                 .addressId(orderEntity.getAddressId())
+                .userId(orderEntity.getUserId())
                 .build();
     }
 }

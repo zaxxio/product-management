@@ -8,6 +8,7 @@ services:
       - "8024:8024" # HTTP port
       - "8124:8124" # gRPC port
     environment:
+      - AXONIQ_AXONSERVER_DEVMODE_ENABLED=true
       - AXONIQ_AXONSERVER_NAME=axonserver
       - AXON_SERVER_HOSTNAME=axonserver
       - AXON_SERVER_CONTEXT=default
