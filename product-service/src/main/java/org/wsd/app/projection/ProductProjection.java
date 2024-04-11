@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.wsd.app.domain.ProductEntity;
 import org.wsd.app.events.ProductCreatedEvent;
+import org.wsd.app.events.ProductReservationCancelledEvent;
 import org.wsd.app.events.ProductReservedEvent;
 import org.wsd.app.payload.ProductRestModel;
 import org.wsd.app.query.product.FindProductsQuery;
@@ -45,6 +46,16 @@ public class ProductProjection {
         if (productEntity.isPresent()) {
             final ProductEntity product = productEntity.get();
             product.setQuantity(product.getQuantity() - productReservedEvent.getQuantity());
+            this.productRepository.save(product);
+        }
+    }
+
+    @EventHandler
+    public void handle(ProductReservationCancelledEvent productReservationCancelledEvent) {
+        final Optional<ProductEntity> productEntity = this.productRepository.findById(productReservationCancelledEvent.getProductId());
+        if (productEntity.isPresent()) {
+            final ProductEntity product = productEntity.get();
+            product.setQuantity(product.getQuantity() + productReservationCancelledEvent.getQuantity());
             this.productRepository.save(product);
         }
     }

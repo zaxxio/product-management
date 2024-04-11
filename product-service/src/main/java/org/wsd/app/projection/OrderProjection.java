@@ -12,6 +12,7 @@ import org.wsd.app.domain.OrderEntity;
 import org.wsd.app.domain.ProductEntity;
 import org.wsd.app.events.OrderApprovedEvent;
 import org.wsd.app.events.OrderCreatedEvent;
+import org.wsd.app.events.OrderRejectedEvent;
 import org.wsd.app.events.ProductReservedEvent;
 import org.wsd.app.payload.OrderRestModel;
 import org.wsd.app.query.order.FindOrdersQuery;
@@ -54,6 +55,17 @@ public class OrderProjection {
         }
         final OrderEntity order = orderEntity.get();
         order.setOrderStatus(OrderStatus.APPROVED);
+        this.orderRepository.save(order);
+    }
+
+    @EventHandler
+    public void handle(OrderRejectedEvent orderRejectedEvent){
+        Optional<OrderEntity> orderEntity = this.orderRepository.findById(orderRejectedEvent.getOrderId());
+        if (orderEntity.isEmpty()) {
+            return;
+        }
+        final OrderEntity order = orderEntity.get();
+        order.setOrderStatus(OrderStatus.REJECTED);
         this.orderRepository.save(order);
     }
 

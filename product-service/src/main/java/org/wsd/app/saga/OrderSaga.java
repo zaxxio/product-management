@@ -1,23 +1,16 @@
 package org.wsd.app.saga;
 
-import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
-import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.wsd.app.comamnds.ApproveOrderCommand;
-import org.wsd.app.comamnds.ProcessPaymentCommand;
-import org.wsd.app.comamnds.ReserveProductCommand;
-import org.wsd.app.events.OrderApprovedEvent;
-import org.wsd.app.events.OrderCreatedEvent;
-import org.wsd.app.events.PaymentProcessedEvent;
-import org.wsd.app.events.ProductReservedEvent;
+import org.wsd.app.comamnds.*;
+import org.wsd.app.events.*;
 import org.wsd.app.payload.UserRestModel;
 import org.wsd.app.query.user.FetchUserPaymentDetailsQuery;
 
@@ -62,6 +55,7 @@ public class OrderSaga {
             userRestModel = queryGateway.query(fetchUserPaymentDetailsQuery, ResponseTypes.instanceOf(UserRestModel.class)).join();
         } catch (Exception ex) {
             log.error("Error while fetching user payment details", ex);
+            cancelProductReservation(productReservedEvent);
             return;
         }
         if (userRestModel == null) {
@@ -81,11 +75,41 @@ public class OrderSaga {
             result = commandGateway.sendAndWait(processPaymentCommand, 10, TimeUnit.SECONDS);
         } catch (Exception ex) {
             log.error("Error while fetching process payment details", ex);
+            cancelProductReservation(productReservedEvent);
+            return;
         }
 
-        if (result != null) {
-            log.info("Successfully fetched process payment details" + result);
+        if (result == null) {
+            cancelProductReservation(productReservedEvent);
+
         }
+        log.info("Successfully fetched process payment details" + result);
+    }
+
+    private void cancelProductReservation(ProductReservedEvent productReservedEvent) {
+        final CancelProductReservationCommand cancelProductReservationCommand = CancelProductReservationCommand.builder()
+                .productId(productReservedEvent.getProductId())
+                .userId(productReservedEvent.getUserId())
+                .quantity(productReservedEvent.getQuantity())
+                .reason("Could not reserve product")
+                .build();
+        this.commandGateway.send(cancelProductReservationCommand);
+    }
+
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(ProductReservationCancelledEvent productReservationCancelledEvent) {
+        final RejectOrderCommand rejectOrderCommand = RejectOrderCommand.builder()
+                .orderId(productReservationCancelledEvent.getOrderId())
+                .reason(productReservationCancelledEvent.getReason())
+                .build();
+        this.commandGateway.send(rejectOrderCommand);
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(OrderRejectedEvent orderRejectedEvent){
+        log.info("Order rejected with Id: {}", orderRejectedEvent.getOrderId());
     }
 
     @SagaEventHandler(associationProperty = "orderId")
