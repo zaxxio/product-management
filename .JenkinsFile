@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+    tools {
+        dockerTool 'Docker'
+        jdk 'JDK 17'
+        maven 'Maven'
+    }
+    environment {
+//        NVD_API_KEY = 'your_nvd_api_key_here'
+        imageName = 'webapp'
+        registryCredentials = 'nexus'
+        registry = 'nexus:8081'
+        dockerImage = ''
+    }
+    stages {
+        stage('Pull Source Code') {
+            steps {
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'Github', url: 'https://github.com/zaxxio/product-management']])
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('OWSAP') {
+            steps {
+                echo 'OWSAP'
+            }
+        }
+        stage('Build Image') {
+            steps {
+                script {
+                    dockerImage = docker.build(imageName)
+                }
+            }
+        }
+        stage('Build Run') {
+            steps {
+                script {
+                    // Build and run Docker container
+                    dockerImage.run('-p 9090:9090 --name webapp')
+                }
+            }
+        }
+//        stage('Deploy to Registry') {
+//            steps {
+//                script {
+//                    docker.withRegistry('http://' + registry, registryCredentials) {
+//                        dockerImage.push('latest')
+//                        echo 'Docker image pushed successfully.'
+//                    }
+//                }
+//            }
+//        }
+//        stage('Deploy to Kubernates') {
+//            steps {
+//                echo 'Kubernates'
+//            }
+//        }
+    }
+}
