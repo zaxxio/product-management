@@ -23,7 +23,7 @@ public class PaymentProjection {
     @EventHandler
     public void handle(PaymentProcessedEvent paymentProcessedEvent) {
         final PaymentEntity paymentEntity = new PaymentEntity();
-        paymentEntity.setPaymentId(paymentEntity.getPaymentId());
+        paymentEntity.setPaymentId(paymentProcessedEvent.getPaymentId());
         paymentEntity.setOrderId(paymentProcessedEvent.getOrderId());
         this.paymentRepository.save(paymentEntity);
     }

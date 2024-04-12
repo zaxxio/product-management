@@ -4,10 +4,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.wsd.app.payload.OrderRestModel;
+import org.wsd.app.query.order.FindOrderQuery;
 import org.wsd.app.query.order.FindOrdersQuery;
 
 import java.util.List;
@@ -24,4 +23,6 @@ public class OrderQueryController {
         final FindOrdersQuery findOrdersQuery = new FindOrdersQuery();
         return queryGateway.query(findOrdersQuery, ResponseTypes.multipleInstancesOf(OrderRestModel.class)).join();
     }
+    
+
 }
