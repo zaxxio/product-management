@@ -5,7 +5,7 @@ FROM openjdk:23-ea-17-jdk-bullseye
 WORKDIR /app
 
 # Copy the Spring Boot application JAR file into the container
-COPY /product-service/target/application.jar /app/application.jar
+COPY ./product-service/target/application.jar /app/application.jar
 
 # Expose the port that your Spring Boot application listens on
 EXPOSE 8080
