@@ -8,7 +8,7 @@ WORKDIR /app
 COPY ./product-service/target/application.jar /app/application.jar
 
 # Expose the port that your Spring Boot application listens on
-EXPOSE 8080
+EXPOSE 9090
 
 # Define the command to run your Spring Boot application when the container starts
 CMD ["java", "-jar", "application.jar"]
