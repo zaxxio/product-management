@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.wsd.app.comamnds.OrderStatus;
 import org.wsd.app.domain.OrderEntity;
-import org.wsd.app.domain.ProductEntity;
 import org.wsd.app.events.OrderApprovedEvent;
 import org.wsd.app.events.OrderCreatedEvent;
 import org.wsd.app.events.OrderRejectedEvent;
-import org.wsd.app.events.ProductReservedEvent;
 import org.wsd.app.payload.OrderRestModel;
-import org.wsd.app.query.order.FindOrdersQuery;
+import org.wsd.app.payload.OrderSummary;
+import org.wsd.app.query.order.FindOrderQuery;
+import org.wsd.app.query.order.FindAllOrdersQuery;
 import org.wsd.app.repository.OrderRepository;
 import org.wsd.app.repository.ProductRepository;
 
@@ -59,7 +59,7 @@ public class OrderProjection {
     }
 
     @EventHandler
-    public void handle(OrderRejectedEvent orderRejectedEvent){
+    public void handle(OrderRejectedEvent orderRejectedEvent) {
         Optional<OrderEntity> orderEntity = this.orderRepository.findById(orderRejectedEvent.getOrderId());
         if (orderEntity.isEmpty()) {
             return;
@@ -70,8 +70,15 @@ public class OrderProjection {
     }
 
     @QueryHandler
-    public List<OrderRestModel> getOrders(FindOrdersQuery findOrdersQuery) {
+    public List<OrderRestModel> getOrders(FindAllOrdersQuery findAllOrdersQuery) {
         return this.orderRepository.findAll().stream().map(OrderRestModel::fromEntity).toList();
+    }
+
+    @QueryHandler
+    public OrderSummary findOrder(FindOrderQuery findOrderQuery) {
+        Optional<OrderEntity> orderEntity = this.orderRepository.findById(findOrderQuery.getOrderId());
+        OrderEntity order = orderEntity.orElseThrow(() -> new RuntimeException("Order " + findOrderQuery.getOrderId() + " not found"));
+        return new OrderSummary(order.getOrderId(), order.getOrderStatus());
     }
 
 }

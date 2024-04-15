@@ -15,7 +15,10 @@ import org.wsd.app.events.ProductReservationCancelledEvent;
 import org.wsd.app.events.ProductReservedEvent;
 
 @Data
-@Aggregate
+@Aggregate(
+        repository = "productAggregateRepository",
+        snapshotTriggerDefinition = "productSnapshotTriggerDefinition"
+)
 @NoArgsConstructor
 public class ProductAggregate {
 
@@ -82,7 +85,7 @@ public class ProductAggregate {
     }
 
     @EventSourcingHandler
-    public void on(ProductReservationCancelledEvent productReservationCancelledEvent){
+    public void on(ProductReservationCancelledEvent productReservationCancelledEvent) {
         this.quantity += productReservationCancelledEvent.getQuantity();
     }
 

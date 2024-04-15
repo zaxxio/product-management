@@ -9,5 +9,5 @@ import org.wsd.app.comamnds.OrderStatus;
 public class OrderRejectedEvent {
     private final String orderId;
     private final String reason;
-    private OrderStatus orderStatus = OrderStatus.REJECTED;
+    private final OrderStatus orderStatus = OrderStatus.REJECTED;
 }

@@ -6,8 +6,7 @@ import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.web.bind.annotation.*;
 import org.wsd.app.payload.OrderRestModel;
-import org.wsd.app.query.order.FindOrderQuery;
-import org.wsd.app.query.order.FindOrdersQuery;
+import org.wsd.app.query.order.FindAllOrdersQuery;
 
 import java.util.List;
 
@@ -20,8 +19,8 @@ public class OrderQueryController {
 
     @GetMapping
     public List<OrderRestModel> getOrders() {
-        final FindOrdersQuery findOrdersQuery = new FindOrdersQuery();
-        return queryGateway.query(findOrdersQuery, ResponseTypes.multipleInstancesOf(OrderRestModel.class)).join();
+        final FindAllOrdersQuery findAllOrdersQuery = new FindAllOrdersQuery();
+        return queryGateway.query(findAllOrdersQuery, ResponseTypes.multipleInstancesOf(OrderRestModel.class)).join();
     }
     
 

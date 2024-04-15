@@ -75,6 +75,11 @@
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.5.0</version>
 		</dependency>
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+			<version>3.4.12</version> <!-- Use the latest version applicable -->
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

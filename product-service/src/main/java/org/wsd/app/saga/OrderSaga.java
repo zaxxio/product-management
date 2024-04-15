@@ -1,6 +1,9 @@
 package org.wsd.app.saga;
 
 import lombok.extern.log4j.Log4j2;
+import org.axonframework.commandhandling.CommandCallback;
+import org.axonframework.commandhandling.CommandMessage;
+import org.axonframework.commandhandling.CommandResultMessage;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.deadline.DeadlineManager;
 import org.axonframework.deadline.annotation.DeadlineHandler;
@@ -9,13 +12,17 @@ import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.queryhandling.QueryUpdateEmitter;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.wsd.app.comamnds.*;
 import org.wsd.app.events.*;
+import org.wsd.app.payload.OrderSummary;
 import org.wsd.app.payload.UserRestModel;
+import org.wsd.app.query.order.FindOrderQuery;
 import org.wsd.app.query.user.FetchUserPaymentDetailsQuery;
 
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -32,6 +39,8 @@ public class OrderSaga {
     private transient QueryGateway queryGateway;
     @Autowired
     private transient DeadlineManager deadlineManager;
+    @Autowired
+    private transient QueryUpdateEmitter queryUpdateEmitter;
 
     public OrderSaga() {
     }
@@ -45,7 +54,15 @@ public class OrderSaga {
                 .userId(orderCreatedEvent.getUserId())
                 .quantity(orderCreatedEvent.getQuantity())
                 .build();
-        this.commandGateway.sendAndWait(reserveProductCommand);
+        this.commandGateway.send(reserveProductCommand, (commandMessage, commandResultMessage) -> {
+            if (commandResultMessage.isExceptional()) {
+                final RejectOrderCommand rejectOrderCommand = RejectOrderCommand.builder()
+                        .orderId(orderCreatedEvent.getOrderId())
+                        .reason(commandResultMessage.exceptionResult().getMessage())
+                        .build();
+                commandGateway.send(rejectOrderCommand);
+            }
+        });
     }
 
     @SagaEventHandler(associationProperty = "orderId")
@@ -120,6 +137,8 @@ public class OrderSaga {
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(OrderRejectedEvent orderRejectedEvent) {
         log.info("Order rejected with Id: {}", orderRejectedEvent.getOrderId());
+        queryUpdateEmitter.emit(FindOrderQuery.class, emit -> true, new OrderSummary(orderRejectedEvent.getOrderId(),
+                orderRejectedEvent.getOrderStatus()));
     }
 
     @SagaEventHandler(associationProperty = "orderId")
@@ -140,5 +159,7 @@ public class OrderSaga {
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(OrderApprovedEvent orderApprovedEvent) {
         log.info("Order is approved. OrderId: {}", orderApprovedEvent.getOrderId());
+        queryUpdateEmitter.emit(FindOrderQuery.class, emit -> true, new OrderSummary(orderApprovedEvent.getOrderId(),
+                orderApprovedEvent.getOrderStatus()));
     }
 }

@@ -7,13 +7,13 @@ pipeline {
     }
     environment {
 //        NVD_API_KEY = 'your_nvd_api_key_here'
-        imageName = 'webapp'
-        registryCredentials = 'nexus'
-        registry = 'nexus:8081'
-        dockerImage = ''
+        DOCKERHUB_CREDENTIALS_ID = 'Docker-Hub' // The ID of your Docker Hub credentials in Jenkins
+        DOCKERHUB_USERNAME = 'parthostutradhar' // Your Docker Hub username
+        IMAGE_NAME = 'parthostutradhar/product-management' // The name of your Docker image, including the repository
+        IMAGE_TAG = 'latest' // The tag for your Docker image
     }
     stages {
-        stage('Pull Source Code') {
+        stage('Checkout') {
             steps {
                 checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'Github', url: 'https://github.com/zaxxio/product-management']])
             }
@@ -34,34 +34,37 @@ pipeline {
             }
         }
         stage('Build Image') {
-            steps {
-                script {
-                    dockerImage = docker.build(imageName)
+                steps {
+                    script {
+                        // Build the Docker image
+                        docker.build("${env.IMAGE_NAME}:${env.IMAGE_TAG}")
                 }
             }
         }
-        stage('Build Run') {
-            steps {
-                script {
-                    // Build and run Docker container
-                    dockerImage.run('-p 9090:9090 --name webapp')
-                }
-            }
-        }
-//        stage('Deploy to Registry') {
-//            steps {
-//                script {
-//                    docker.withRegistry('http://' + registry, registryCredentials) {
-//                        dockerImage.push('latest')
-//                        echo 'Docker image pushed successfully.'
-//                    }
-//                }
-//            }
-//        }
-//        stage('Deploy to Kubernates') {
-//            steps {
-//                echo 'Kubernates'
-//            }
-//        }
+//         stage('Build Run') {
+//             steps {
+//                 script {
+//                     // Build and run Docker container
+//                     dockerImage.run('-p 9090:9090 --name webapp')
+//                 }
+//             }
+//         }
+       stage('Push Image to Docker Hub') {
+           steps {
+               script {
+                   // Log in to Docker Hub
+                   docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS_ID) {
+                       // Push the Docker image to Docker Hub
+                       docker.image("${env.IMAGE_NAME}:${env.IMAGE_TAG}").push("${env.BUILD_NUMBER}")
+                       docker.image("${env.IMAGE_NAME}:${env.IMAGE_TAG}").push("latest")
+                   }
+               }
+           }
+       }
+       stage('Deploy to Kubernates') {
+           steps {
+               echo 'Kubernates'
+           }
+       }
     }
 }

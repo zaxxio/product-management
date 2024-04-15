@@ -26,7 +26,7 @@ public class OrderAggregate {
     private String addressId;
     private OrderStatus orderStatus;
 
-    @CommandHandler
+    @CommandHandler(payloadType = CreateOrderCommand.class)
     public OrderAggregate(CreateOrderCommand createOrderCommand) {
         AggregateLifecycle.apply(OrderCreatedEvent.builder()
                 .orderId(createOrderCommand.getOrderId())
@@ -39,7 +39,7 @@ public class OrderAggregate {
         );
     }
 
-    @EventSourcingHandler
+    @EventSourcingHandler(payloadType = OrderApprovedEvent.class)
     public void on(OrderCreatedEvent orderCreatedEvent) {
         this.orderId = orderCreatedEvent.getOrderId();
         this.productId = orderCreatedEvent.getProductId();
@@ -49,7 +49,7 @@ public class OrderAggregate {
         this.orderStatus = orderCreatedEvent.getOrderStatus();
     }
 
-    @CommandHandler
+    @CommandHandler(payloadType = ProductReservedEvent.class)
     public void on(ApproveOrderCommand approveOrderCommand) {
         final OrderApprovedEvent orderApprovedEvent = OrderApprovedEvent.builder()
                 .orderId(approveOrderCommand.getOrderId())
@@ -57,13 +57,13 @@ public class OrderAggregate {
         AggregateLifecycle.apply(orderApprovedEvent);
     }
 
-    @EventSourcingHandler
+    @EventSourcingHandler(payloadType = ProductReservedEvent.class)
     public void on(OrderApprovedEvent orderApprovedEvent) {
         this.orderStatus = orderApprovedEvent.getOrderStatus();
     }
 
 
-    @CommandHandler
+    @CommandHandler(payloadType = ProductReservedEvent.class)
     public void on(RejectOrderCommand rejectOrderCommand) {
         OrderRejectedEvent orderRejectedEvent = OrderRejectedEvent.builder()
                 .orderId(rejectOrderCommand.getOrderId())
@@ -72,7 +72,7 @@ public class OrderAggregate {
         AggregateLifecycle.apply(orderRejectedEvent);
     }
 
-    @EventSourcingHandler
+    @EventSourcingHandler(payloadType = ProductReservedEvent.class)
     public void on(OrderRejectedEvent orderRejectedEvent) {
         this.orderStatus = orderRejectedEvent.getOrderStatus();
     }

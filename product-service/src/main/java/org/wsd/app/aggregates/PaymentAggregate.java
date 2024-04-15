@@ -20,8 +20,7 @@ public class PaymentAggregate {
     @AggregateIdentifier
     private String paymentId;
     private String orderId;
-
-
+    
     @CommandHandler
     public PaymentAggregate(ProcessPaymentCommand processPaymentCommand) {
         final PaymentProcessedEvent paymentProcessedEvent = PaymentProcessedEvent.builder()
